@@ -1,0 +1,269 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome to Carla’s documentation! &#8212; Carla Video Data Generator  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Carla Video Data Generator  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-recorder">
+<span id="welcome-to-carla-s-documentation"></span><h1>Welcome to Carla’s documentation!<a class="headerlink" href="#module-recorder" title="Permalink to this headline">¶</a></h1>
+<p>Recorder class implementation.</p>
+<dl class="class">
+<dt id="recorder.Recorder">
+<em class="property">class </em><code class="descclassname">recorder.</code><code class="descname">Recorder</code><span class="sig-paren">(</span><em>world</em>, <em>video_file</em>, <em>log_file</em>, <em>info_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/recorder.html#Recorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#recorder.Recorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>A recorder object is an RGB camera located in a specified location (or in a random location
+if not specified). Object records observed frames into a video file and logs the visible
+actors in sight into a csv file. Also, video record date and server time for the first
+frame is logged to an info file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>world</strong> (<em>carla.World</em>) – World object. Server world object passed by reference. Recorder object is placed</li>
+<li><strong>video_file</strong> (<em>file</em>) – Name or file descriptor for the video recording output.</li>
+<li><strong>log_file</strong> (<em>file</em>) – Name or file descriptor for the visible actors log file.</li>
+<li><strong>info_file</strong> (<em>file</em>) – Name or file descriptor for the recording information file.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>writer</strong> (<em>skvideo.io.FFmpegWriter</em>) – Video frame writer object. Uses FFmpegWriter class of skvideo.io</li>
+<li><strong>logger</strong> (<em>csv.writer</em>) – Logger object which logs the observed actors’ pixel locations on
+the recorded frames.</li>
+<li><strong>info_file</strong> (<em>file</em>) – Information file logger object which records the date of recording
+and the server tick time of the first frame.</li>
+<li><strong>cur_pos</strong> (<em>list</em>) – Current position vector of the Recorder object. Has 3 elements specifying the real-world
+coordinates for the Recorder object. Vector elements are [x, y, z].</li>
+<li><strong>cur_velocity</strong> (<em>list</em>) – Current velocity vector of the Recorder object. Has 2 elements specifying the real-
+world velocity of the object in x and y dimensions. Vector elements are [V_x, V_y].</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="recorder.Recorder.log_actors">
+<code class="descname">log_actors</code><span class="sig-paren">(</span><em>time</em>, <em>actors</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/recorder.html#Recorder.log_actors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#recorder.Recorder.log_actors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actor logging function. Main loop provides the server time which is to be logged into the
+actor log file along with the pixel locations of the actor centers, bounding box size in
+pixel coordinates and the orientations of the bounding boxes on pixel plane. Also, actor
+type and the ID is recorded.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>time</strong> (<em>int</em>) – Server time.</li>
+<li><strong>actors</strong> (<em>list</em>) – List of carla.Actor objects.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="recorder.Recorder.record_img">
+<code class="descname">record_img</code><span class="sig-paren">(</span><em>time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/recorder.html#Recorder.record_img"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#recorder.Recorder.record_img" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records a frame obtained from the RGB camera sensor. Image frame is converted to a numpy.ndarray
+which is then fed to the FFmpeg writer. Image array is returned the caller for visualizing. Also,
+after capturing the first video frame, server time is recorded which will be logged to the info file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time</strong> (<em>int</em>) – Server time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Captured image frame.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="recorder.Recorder.rotation">
+<code class="descname">rotation</code><a class="headerlink" href="#recorder.Recorder.rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotation matrix for the yaw angle.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Rotation matrix.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-spawn"></span><p>Actor spawner class implementation.</p>
+<dl class="class">
+<dt id="spawn.Spawn">
+<em class="property">class </em><code class="descclassname">spawn.</code><code class="descname">Spawn</code><span class="sig-paren">(</span><em>world</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spawn.html#Spawn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spawn.Spawn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiple actor spawner object iss bound to a carla.World object and spawns vehicles or walkers
+inside the world object that it is bound to. Also keeps track of the carla.Actor objects spawned
+by this object. While spawning actors, caller can specify a specific blueprint and a location or,
+spawner object will pick randomly. Upon destruction, destroys all actors spawned by this object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>world</strong> (<em>carla.World</em>) – World object in which the actors will be spawned.</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>world</strong> (<em>carla.World</em>) – World object in which the actors will be spawned.</li>
+<li><strong>spawned_actors</strong> (<em>list</em>) – List of actors spawned by this Spawn object.</li>
+<li><strong>filter_dict</strong> (<em>Dictionary</em>) – Short keywords for filters passed to the Spawn object. Filter type will be
+used to filter the blueprint population from which the random blueprint will
+be sampled.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="spawn.Spawn.spawn_actor">
+<code class="descname">spawn_actor</code><span class="sig-paren">(</span><em>location=None</em>, <em>actor_type=''</em>, <em>blueprint=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spawn.html#Spawn.spawn_actor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spawn.Spawn.spawn_actor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actor spawning method. If specified, created actor will spawn in the given location. Otherwise,
+a random location will be selected from the available spawn points. If specified, an actor with
+the specified blueprint will be spawned. Otherwise, a random will be selected from the available
+blueprint library.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>location</strong> (<em>carla.Transform</em>) – Location of the actor that will be spawned. If not specified,
+a random location will be sampled from the available spawn
+points.</li>
+<li><strong>actor_type</strong> (<em>str</em>) – Type of the actor to be generated. Can be [“walker”, “vehicle”].</li>
+<li><strong>blueprint</strong> (<em>carla.Blueprint</em>) – Blueprint for the actor to be spawned. If not specified, a
+random blueprint will be picked from the library.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to Carla’s documentation!</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Carla Video Data Generator  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Oguzhan Karaahmetoglu.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+    </div>
+  </body>
+</html>
