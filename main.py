@@ -30,6 +30,10 @@ if __name__ == "__main__":
     world = client.get_world()
     settings = world.get_settings()
 
+    if not settings.synchronous_mode:
+        settings.synchronous_mode = True
+        world.apply_settings(settings)
+
     record = recorder.Recorder(world=world,
                                video_file=video_file,
                                log_file=log_file,
@@ -48,7 +52,9 @@ if __name__ == "__main__":
             cv2.imshow("camera", frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                raise KeyboardInterrupt
+                break
+
+        raise KeyboardInterrupt
 
     except KeyboardInterrupt:
         del record

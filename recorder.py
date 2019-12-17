@@ -37,6 +37,7 @@ class Recorder:
 
         self.cur_pos = [0, 0, 120]
         self.cur_velocity = [0, 0]
+        self.cur_angle = [90, -90]
 
         self.aspect_ratio = VIDEO_RES[1] / VIDEO_RES[0]
         self.boundaries = [2 * self.cur_pos[2] * math.tan(math.pi/4)]
@@ -51,7 +52,7 @@ class Recorder:
         transform = Transform(Location(x=self.cur_pos[0],
                                        y=self.cur_pos[1],
                                        z=self.cur_pos[2]),
-                              Rotation(pitch=-90))
+                              Rotation(yaw=self.cur_angle[0], pitch=self.cur_angle[1]))
         self.camera = world.spawn_actor(camera_bp, transform)
 
         self.image_queue = queue.Queue()
@@ -63,15 +64,25 @@ class Recorder:
         for actor in actors:
             location = actor.get_location()
             actor_type = actor.type_id.split(".")[0]
-            if -self.boundaries[0] // 2 < location.x - self.cur_pos[0] < self.boundaries[0] // 2 and \
-                    -self.boundaries[1] // 2 < location.y - self.cur_pos[1] < self.boundaries[1] // 2:
-                orient = actor.get_transform().rotation.yaw
-                box = actor.bounding_box
-                height = VIDEO_RES[0] / self.boundaries[0] * box.extent.x
-                width = VIDEO_RES[0] / self.boundaries[0] * box.extent.y
 
-                x_loc = int(-VIDEO_RES[0] / self.boundaries[0] * (location.x - self.cur_pos[0]) + VIDEO_RES[0] // 2)
-                y_loc = int(VIDEO_RES[1] / self.boundaries[1] * (location.y - self.cur_pos[1]) + VIDEO_RES[1] // 2)
+            conversion_rate = VIDEO_RES[0] / self.boundaries[0] * self.cur_pos[2] / (self.cur_pos[2] - location.z)
+            x_bounds = self.boundaries[0]*conversion_rate // 2
+            y_bounds = self.boundaries[1]*conversion_rate // 2
+
+            del_x = location.x - self.cur_pos[0]
+            del_y = location.y - self.cur_pos[1]
+
+            rot_x, rot_y = np.matmul(self.rotation, np.array([[del_x], [del_y]]))
+            if -x_bounds < rot_x < x_bounds and \
+                    -y_bounds < rot_y < y_bounds:
+                orient = actor.get_transform().rotation.yaw - self.cur_angle[0]
+                box = actor.bounding_box
+                height = box.extent.x * conversion_rate
+                width = box.extent.y * conversion_rate
+
+                x_loc = int(-conversion_rate * rot_x + VIDEO_RES[0] // 2)
+                y_loc = int(conversion_rate * rot_y + VIDEO_RES[1] // 2)
+
                 self.logger.writerows([[actor.id, actor_type, time, x_loc, y_loc, orient, height, width]])
 
     def record_img(self, time):
@@ -86,6 +97,13 @@ class Recorder:
         array = array[:, :, ::-1]
         self.writer.writeFrame(array)
         return array
+
+    @property
+    def rotation(self):
+        angle = -self.cur_angle[0]*np.pi/180
+        rotation_matrix = np.array([[np.cos(angle), -np.sin(angle)],
+                                    [np.sin(angle), np.cos(angle)]])
+        return rotation_matrix
 
     def __del__(self):
         print("Video start timestamp: {}".format(str(self.video_start_time)), file=self.info_file, flush=True)
