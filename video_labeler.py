@@ -1,3 +1,7 @@
+"""
+Video labeling util functions. Called after the data is collected. Bounding boxes are drawn
+on the video frames.
+"""
 import numpy as np
 import pandas as pd
 import skvideo.io
@@ -7,6 +11,18 @@ from PIL import ImageDraw
 
 
 def get_rect(x, y, width, height, angle):
+    """
+    Generates the vertices of a rectangle with the specified center coordinates, width, height
+    and orientation angle. All units are in pixel coordinates.
+
+    :param int x: Center x location.
+    :param int y: Center y location.
+    :param int width: Width of the bounding box.
+    :param int height: Height of the bounding box.
+    :param int angle: (in degrees) Orientation angle of the bounding box.
+    :return: Vertex coordinates.
+    :rtype: list
+    """
     rect = np.array([(-width/0.6, -height/0.6), (width/0.6, -height/0.6),
                      (width/0.6, height/0.6), (-width/0.6, height/0.6),
                      (-width/0.6, -height/0.6)])
@@ -19,6 +35,15 @@ def get_rect(x, y, width, height, angle):
 
 
 def label_video(log_file, video_file, out_file):
+    """
+    Video labeling function. Called at the end of the data collection loop. Takes the video
+    and draws the bounding boxes at the actor locations on the frames.
+
+    :param str log_file: Actor log file with bounding box locations of the visible actors.
+    :param str video_file: Video file containing the captured frames.
+    :param str out_file: Output video file with bounding boxes.
+    :return: None
+    """
     logs = pd.read_csv(log_file)
     video_data = skvideo.io.vread(video_file)
     processed_video = skvideo.io.FFmpegWriter(out_file)

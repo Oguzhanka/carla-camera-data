@@ -38,7 +38,7 @@
           <div class="body" role="main">
             
   <h1>Source code for spawn</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Actor spawner class implementation.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">random</span>
@@ -48,10 +48,10 @@
 
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s">&#39;../carla/dist/carla-*%d.%d-%s.egg&#39;</span> <span class="o">%</span> <span class="p">(</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;../carla/dist/carla-*</span><span class="si">%d</span><span class="s1">.</span><span class="si">%d</span><span class="s1">-</span><span class="si">%s</span><span class="s1">.egg&#39;</span> <span class="o">%</span> <span class="p">(</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span><span class="p">,</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span>
-        <span class="s">&#39;win-amd64&#39;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;nt&#39;</span> <span class="k">else</span> <span class="s">&#39;linux-x86_64&#39;</span><span class="p">))[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="s1">&#39;win-amd64&#39;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;nt&#39;</span> <span class="k">else</span> <span class="s1">&#39;linux-x86_64&#39;</span><span class="p">))[</span><span class="mi">0</span><span class="p">])</span>
 <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
     <span class="k">pass</span>
 
@@ -89,11 +89,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">world</span> <span class="o">=</span> <span class="n">world</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spawned_actors</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;&quot;</span><span class="p">:</span> <span class="s">&quot;*&quot;</span><span class="p">,</span>
-                            <span class="s">&quot;vehicle&quot;</span><span class="p">:</span> <span class="s">&quot;vehicle&quot;</span><span class="p">,</span>
-                            <span class="s">&quot;walker&quot;</span><span class="p">:</span> <span class="s">&quot;walker&quot;</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;vehicle&quot;</span><span class="p">:</span> <span class="s2">&quot;vehicle&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;walker&quot;</span><span class="p">:</span> <span class="s2">&quot;walker&quot;</span><span class="p">}</span>
 
-<div class="viewcode-block" id="Spawn.spawn_actor"><a class="viewcode-back" href="../index.html#spawn.Spawn.spawn_actor">[docs]</a>    <span class="k">def</span> <span class="nf">spawn_actor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">actor_type</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">blueprint</span><span class="o">=</span><span class="k">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Spawn.spawn_actor"><a class="viewcode-back" href="../index.html#spawn.Spawn.spawn_actor">[docs]</a>    <span class="k">def</span> <span class="nf">spawn_actor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">actor_type</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">blueprint</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Actor spawning method. If specified, created actor will spawn in the given location. Otherwise,</span>
 <span class="sd">        a random location will be selected from the available spawn points. If specified, an actor with</span>
@@ -108,19 +108,19 @@
 <span class="sd">                                          random blueprint will be picked from the library.</span>
 <span class="sd">        :return: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">location</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">location</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">transform</span> <span class="o">=</span> <span class="n">Transform</span><span class="p">(</span><span class="n">Location</span><span class="p">(</span><span class="o">**</span><span class="n">location</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">spawn_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">get_map</span><span class="p">()</span><span class="o">.</span><span class="n">get_spawn_points</span><span class="p">()</span>
             <span class="n">transform</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">spawn_points</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="n">blueprint</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">blueprint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">blueprints</span> <span class="o">=</span> <span class="p">[</span><span class="n">bp</span> <span class="k">for</span> <span class="n">bp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">get_blueprint_library</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_dict</span><span class="p">[</span><span class="n">actor_type</span><span class="p">])]</span>
             <span class="n">blueprint</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">blueprints</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="n">actor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">try_spawn_actor</span><span class="p">(</span><span class="n">blueprint</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">actor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="k">None</span><span class="p">:</span>
-            <span class="n">actor</span><span class="o">.</span><span class="n">set_autopilot</span><span class="p">(</span><span class="k">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">actor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">actor</span><span class="o">.</span><span class="n">set_autopilot</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">spawned_actors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">actor</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

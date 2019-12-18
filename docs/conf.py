@@ -39,12 +39,14 @@ release = ''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.viewcode', 'sphinx.ext.autodoc',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.todo',
+    'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
 ]
 
-autodoc_mock_imports = ['carla.Transform', 'carla.Rotation',
-                        'carla.Location', 'carla.ColorConverter']
+autodoc_mock_imports = ["carla", "carla.Transform", "carla.Location", "carla.Rotation",
+                        "carla.ColorConverter"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -106,7 +108,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Carladoc'
+htmlhelp_basename = 'CarlaVideoDataGeneratordoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -133,7 +135,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Carla.tex', 'Carla Documentation',
+    (master_doc, 'CarlaVideoDataGenerator.tex', 'Carla Video Data Generator Documentation',
      'Oguzhan Karaahmetoglu', 'manual'),
 ]
 
@@ -143,7 +145,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'carla', 'Carla Documentation',
+    (master_doc, 'carlavideodatagenerator', 'Carla Video Data Generator Documentation',
      [author], 1)
 ]
 
@@ -154,8 +156,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Carla', 'Carla Documentation',
-     author, 'Carla', 'One line description of project.',
+    (master_doc, 'CarlaVideoDataGenerator', 'Carla Video Data Generator Documentation',
+     author, 'CarlaVideoDataGenerator', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -179,3 +181,8 @@ epub_exclude_files = ['search.html']
 
 
 # -- Extension configuration -------------------------------------------------
+
+# -- Options for todo extension ----------------------------------------------
+
+# If true, `todo` and `todoList` produce output, else they produce nothing.
+todo_include_todos = True

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Welcome to Carla’s documentation! &#8212; Carla Video Data Generator  documentation</title>
+    <title>Welcome to Carla Video Data Generator’s documentation! &#8212; Carla Video Data Generator  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <div class="section" id="module-recorder">
-<span id="welcome-to-carla-s-documentation"></span><h1>Welcome to Carla’s documentation!<a class="headerlink" href="#module-recorder" title="Permalink to this headline">¶</a></h1>
+<span id="welcome-to-carla-video-data-generator-s-documentation"></span><h1>Welcome to Carla Video Data Generator’s documentation!<a class="headerlink" href="#module-recorder" title="Permalink to this headline">¶</a></h1>
 <p>Recorder class implementation.</p>
 <dl class="class">
 <dt id="recorder.Recorder">
@@ -202,6 +202,59 @@ random blueprint will be picked from the library.</li>
 
 </dd></dl>
 
+<span class="target" id="module-video_labeler"></span><p>Video labeling util functions. Called after the data is collected. Bounding boxes are drawn
+on the video frames.</p>
+<dl class="function">
+<dt id="video_labeler.get_rect">
+<code class="descclassname">video_labeler.</code><code class="descname">get_rect</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>width</em>, <em>height</em>, <em>angle</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_labeler.html#get_rect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_labeler.get_rect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the vertices of a rectangle with the specified center coordinates, width, height
+and orientation angle. All units are in pixel coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>int</em>) – Center x location.</li>
+<li><strong>y</strong> (<em>int</em>) – Center y location.</li>
+<li><strong>width</strong> (<em>int</em>) – Width of the bounding box.</li>
+<li><strong>height</strong> (<em>int</em>) – Height of the bounding box.</li>
+<li><strong>angle</strong> (<em>int</em>) – (in degrees) Orientation angle of the bounding box.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Vertex coordinates.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_labeler.label_video">
+<code class="descclassname">video_labeler.</code><code class="descname">label_video</code><span class="sig-paren">(</span><em>log_file</em>, <em>video_file</em>, <em>out_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_labeler.html#label_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_labeler.label_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Video labeling function. Called at the end of the data collection loop. Takes the video
+and draws the bounding boxes at the actor locations on the frames.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>log_file</strong> (<em>str</em>) – Actor log file with bounding box locations of the visible actors.</li>
+<li><strong>video_file</strong> (<em>str</em>) – Video file containing the captured frames.</li>
+<li><strong>out_file</strong> (<em>str</em>) – Output video file with bounding boxes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <div class="toctree-wrapper compound">
 </div>
 </div>
@@ -222,7 +275,7 @@ random blueprint will be picked from the library.</li>
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to Carla’s documentation!</a></li>
+<li><a class="reference internal" href="#">Welcome to Carla Video Data Generator’s documentation!</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 
