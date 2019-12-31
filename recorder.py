@@ -4,10 +4,12 @@ Recorder class implementation.
 import skvideo.io
 import numpy as np
 import datetime
+import config
 import math
 import glob
 import sys
 import csv
+import cv2
 import os
 
 
@@ -93,14 +95,19 @@ class Recorder:
         camera_bp.set_attribute('image_size_x', str(VIDEO_RES[1]))
         camera_bp.set_attribute('image_size_y', str(VIDEO_RES[0]))
 
+        segmentation_camera = bp_library.find('sensor.camera.semantic_segmentation')
+
         transform = Transform(Location(x=self.cur_pos[0],
                                        y=self.cur_pos[1],
                                        z=self.cur_pos[2]),
                               Rotation(yaw=self.cur_angle[0], pitch=self.cur_angle[1]))
         self.camera = world.spawn_actor(camera_bp, transform)
+        self.segmentation_goggles = world.spawn_actor(segmentation_camera, transform)
 
         self.image_queue = queue.Queue()
+        self.seqmentation_queue = queue.Queue()
         self.camera.listen(self.image_queue.put)
+        self.segmentation_goggles.listen(self.seqmentation_queue.put())
 
         self.video_start_time = -1
 
@@ -115,6 +122,8 @@ class Recorder:
         :param list actors: List of carla.Actor objects.
         :return: None
         """
+        detected_actors = self.detect_actors()
+
         for actor in actors:
             location = actor.get_location()
             actor_type = actor.type_id.split(".")[0]
@@ -160,6 +169,38 @@ class Recorder:
         array = array[:, :, ::-1]
         self.writer.writeFrame(array)
         return array
+
+    def detect_actors(self):
+        image = self.seqmentation_queue.get()
+        image.convert(cc.Raw)
+        array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+        array = np.reshape(array, (image.height, image.width, 4))
+        array = array[:, :, :3]
+        array = array[:, :, ::-1]
+
+        detected_actors = {}
+
+        for object_type in config.classes.keys():
+            if object_type not in ["Vehicles", "Pedestrians"]:
+                continue
+
+            detected_actors[object_type] = []
+            object_value = config.classes[object_type]
+            threshold = ([val - 5 for val in object_value], [val + 5 for val in object_value])
+            mask = cv2.inRange(array, threshold[0], threshold[1])
+
+            _, contours, hierarchy = cv2.findContours(mask.copy(),
+                                                      cv2.RETR_EXTERNAL,
+                                                      cv2.CHAIN_APPROX_SIMPLE)[-2]
+
+            for contour in contours:
+                rect = cv2.minAreaRect(contour)
+                theta = rect.angle
+                x, y = list(rect.center)
+                w, h = list(rect.size)
+                detected_actors[object_type].append([x, y, w, h, theta])
+
+        return detected_actors
 
     @property
     def rotation(self):
