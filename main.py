@@ -16,15 +16,18 @@ except IndexError:
     pass
 
 import carla
+from carla import Transform
+from carla import Location, Rotation
+from carla import ColorConverter as cc
 
 
 if __name__ == "__main__":
-    info_file = "./out/info.txt"
-    video_file = "./out/video.mp4"
-    log_file = "./out/log.csv"
-    labeled_file = "./out/labeled.mp4"
+    info_file = "/home/oguzhan/PycharmProjects/carla/out/info.txt"
+    video_file = "/home/oguzhan/PycharmProjects/carla/out/video.mp4"
+    log_file = "/home/oguzhan/PycharmProjects/carla/out/log.csv"
+    labeled_file = "/home/oguzhan/PycharmProjects/carla/out/labeled.mp4"
 
-    client = carla.Client('192.168.2.211', 2000)
+    client = carla.Client('192.168.12.211', 2000)
     client.set_timeout(10.0)
 
     world = client.get_world()
@@ -32,6 +35,7 @@ if __name__ == "__main__":
 
     if not settings.synchronous_mode:
         settings.synchronous_mode = True
+        settings.fixed_delta_seconds = 0.03
         world.apply_settings(settings)
 
     record = recorder.Recorder(world=world,
@@ -47,9 +51,10 @@ if __name__ == "__main__":
     try:
         while True:
             time = world.tick()
-            record.log_actors(time, world.get_actors().filter("vehicle.*"))
+            record.log_actors(time)
             frame = record.record_img(time)
             cv2.imshow("camera", frame)
+            record.move()
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
