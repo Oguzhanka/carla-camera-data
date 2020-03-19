@@ -204,6 +204,25 @@ class Recorder:
         array = array[:, :, :3]
         array = array[:, :, ::-1]
 
+        """
+        Filtering out the vegetation.
+        """
+        object_value = config.classes["Vegetation"]
+        threshold = ([val for val in object_value], [val for val in object_value])
+        mask = cv2.inRange(array, np.array(threshold[0]), np.array(threshold[1]))
+
+        contours, hierarchy = cv2.findContours(mask.copy(),
+                                               cv2.RETR_EXTERNAL,
+                                               cv2.CHAIN_APPROX_NONE)
+
+        for contour in contours:
+            rect = cv2.minAreaRect(contour)
+            cv2.rectangle(array,
+                          (int(rect[0][0]), int(rect[0][1])),
+                          (int(rect[0][0]) + int(rect[1][0]),
+                           int(rect[0][1]) + int(rect[1][1])),
+                          (255, 0, 0), -1)
+
         detected_actors = {}
 
         for object_type in config.classes.keys():

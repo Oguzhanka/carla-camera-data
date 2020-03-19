@@ -8,7 +8,7 @@ classes = {
     "RoadLines": [157, 234, 50],
     "Roads": [128, 64, 128],
     "Sidewalks": [244, 35, 232],
-    "Vegetation": [107, 142, 35],
+    "Vegetation": [9, 0, 0],
     "Vehicles": [10, 0, 0],
     "Walls": [102, 102, 156],
     "TrafficSigns": [220, 220, 0]
