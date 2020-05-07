@@ -74,22 +74,25 @@ class Recorder:
                         world velocity of the object in x and y dimensions. Vector elements are [V_x, V_y].
     :vartype cur_velocity: list
     """
-    def __init__(self, world, video_file, log_file, info_file):
+    def __init__(self, world, video_file, log_file, info_file, order):
         self.writer = skvideo.io.FFmpegWriter(video_file,
                                               outputdict={'-vcodec': 'libx264'})
         self.logger = csv.writer(open(log_file, "w"))
         self.logger.writerows([["type", "time", "x", "y", "orient", "width", "height"]])
 
         self.info_file = open(info_file, "w")
+        self.order = order
 
         self.video_start_time = -1
         print("Record date: {}".format(datetime.datetime.today()),
               file=self.info_file,
               flush=True)
 
-        self.cur_pos = [0, 0, 120]
+        self.radius = 150
+        self.cur_pos = [150, 0, 120]
         self.cur_velocity = [2, 0, 1, 1]
         self.cur_angle = [90, -80]
+        self.cur_angular_velocity = [1, 1]  # One for x, y and one for pitch
 
         self.aspect_ratio = VIDEO_RES[1] / VIDEO_RES[0]
         self.boundaries = [2 * self.cur_pos[2] * math.tan(math.pi/4)]
@@ -139,6 +142,22 @@ class Recorder:
         self.camera.set_transform(transform)
         self.segmentation_goggles.set_transform(transform)
 
+    def move_2(self, time):
+        self.cur_pos[0] = self.radius * np.cos(self.cur_angular_velocity[0] * time)
+        self.cur_pos[1] = self.radius * np.sin(self.cur_angular_velocity[0] * time)
+
+        self.cur_angle[0] = np.pi / 2 * np.cos(self.cur_angular_velocity[1] * time)
+
+        transform = Transform(Location(x=self.cur_pos[0],
+                                       y=self.cur_pos[1],
+                                       z=self.cur_pos[2]),
+                              Rotation(yaw=self.cur_angle[0], pitch=self.cur_angle[1]))
+
+        self.camera.set_transform(transform)
+        self.segmentation_goggles.set_transform(transform)
+
+
+
     def log_actors(self, time):
         """
         Actor logging function. Main loop provides the server time which is to be logged into the
@@ -151,10 +170,10 @@ class Recorder:
         """
         detected_actors = self.detect_actors(time)
         ms = self.world.get_snapshot().platform_timestamp
-        ms_diff = int((ms - self.init_ms) * 1000 % 1000)
-        h_diff = int((ms - self.init_ms) // 3600)
-        m_diff = int((ms - self.init_ms) // 600 - h_diff * 60)
-        s_diff = int((ms - self.init_ms) - h_diff * 3600 - m_diff * 60)
+        ms_diff = int((ms - self.init_ms) * 0.033 * 1000)
+        h_diff = int((ms - self.init_ms) * 0.033 // 3600)
+        m_diff = int((ms - self.init_ms) * 0.033 // 600 - h_diff * 60)
+        s_diff = int((ms - self.init_ms) * 0.033 - h_diff * 3600 - m_diff * 60)
         cur_frame = {"frame": time-self.init_time,
                      "miliseconds": "{}:{}:{}:{}".format(h_diff, m_diff, s_diff, ms_diff),
                      "bboxes": []}
@@ -222,7 +241,7 @@ class Recorder:
                           (int(rect[0][0]) + int(rect[1][0]),
                            int(rect[0][1]) + int(rect[1][1])),
                           (255, 0, 0), -1)
-
+        
         detected_actors = {}
 
         for object_type in config.classes.keys():
@@ -233,7 +252,6 @@ class Recorder:
             object_value = config.classes[object_type]
             threshold = ([val for val in object_value], [val for val in object_value])
             mask = cv2.inRange(array, np.array(threshold[0]), np.array(threshold[1]))
-
             contours, hierarchy = cv2.findContours(mask.copy(),
                                                    cv2.RETR_EXTERNAL,
                                                    cv2.CHAIN_APPROX_NONE)
@@ -278,7 +296,7 @@ class Recorder:
         :return: None
         """
         print("Video start timestamp: {}".format(str(self.video_start_time)), file=self.info_file, flush=True)
-        with open('./out/result.json', 'w') as fp:
+        with open('./out/result_{}.json'.format(self.order), 'w') as fp:
             json.dump(self.json_dict, fp)
         self.camera.destroy()
         self.writer.close()
