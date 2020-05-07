@@ -3,6 +3,7 @@ import recorder
 import spawn
 import cv2
 import glob
+import time
 import os
 import sys
 
@@ -16,15 +17,19 @@ except IndexError:
     pass
 
 import carla
+from carla import Transform
+from carla import Location, Rotation
+from carla import ColorConverter as cc
 
 
 if __name__ == "__main__":
-    info_file = "./out/info.txt"
-    video_file = "./out/video.mp4"
-    log_file = "./out/log.csv"
-    labeled_file = "./out/labeled.mp4"
+    order = sys.argv[-1]
+    info_file = "/home/oguzhan/PycharmProjects/carla/out/info_{}.txt".format(order)
+    video_file = "/home/oguzhan/PycharmProjects/carla/out/video_{}.mp4".format(order)
+    log_file = "/home/oguzhan/PycharmProjects/carla/out/log_{}.csv".format(order)
+    labeled_file = "/home/oguzhan/PycharmProjects/carla/out/labeled_{}.mp4".format(order)
 
-    client = carla.Client('192.168.2.211', 2000)
+    client = carla.Client('192.168.12.211', 2000)
     client.set_timeout(10.0)
 
     world = client.get_world()
@@ -32,26 +37,35 @@ if __name__ == "__main__":
 
     if not settings.synchronous_mode:
         settings.synchronous_mode = True
+        settings.fixed_delta_seconds = 0.033
         world.apply_settings(settings)
 
     record = recorder.Recorder(world=world,
                                video_file=video_file,
                                log_file=log_file,
-                               info_file=info_file)
+                               info_file=info_file,
+                               order=order)
 
     spawner = spawn.Spawn(world=world)
+    start_time = 0.0
 
     for i in range(10):
         spawner.spawn_actor(actor_type="vehicle")
 
     try:
+        k = 0
         while True:
-            time = world.tick()
-            record.log_actors(time, world.get_actors().filter("vehicle.*"))
-            frame = record.record_img(time)
-            cv2.imshow("camera", frame)
+            k += 1
+            server_time = world.tick()
+            cur_time = world.get_snapshot().platform_timestamp
+            if start_time == 0.0:
+                start_time = cur_time
+            print("\rELAPSED TIME: {}".format(k * 0.033), end="", flush=True)
+            record.log_actors(server_time)
+            frame = record.record_img(server_time)
+            record.move_2((cur_time - start_time) / 1000)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if k > 15000:
                 break
 
         raise KeyboardInterrupt

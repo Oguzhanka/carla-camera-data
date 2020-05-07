@@ -4,10 +4,14 @@ Recorder class implementation.
 import skvideo.io
 import numpy as np
 import datetime
+import config
+import helper
 import math
+import json
 import glob
 import sys
 import csv
+import cv2
 import os
 
 
@@ -21,13 +25,15 @@ try:
 except IndexError:
     pass
 
-import queue
+import carla
 from carla import Transform
 from carla import Location, Rotation
 from carla import ColorConverter as cc
 
+import queue
 
-VIDEO_RES = (960, 1280)
+
+VIDEO_RES = (1440, 2560)
 
 
 class Recorder:
@@ -68,20 +74,25 @@ class Recorder:
                         world velocity of the object in x and y dimensions. Vector elements are [V_x, V_y].
     :vartype cur_velocity: list
     """
-    def __init__(self, world, video_file, log_file, info_file):
+    def __init__(self, world, video_file, log_file, info_file, order):
         self.writer = skvideo.io.FFmpegWriter(video_file,
                                               outputdict={'-vcodec': 'libx264'})
         self.logger = csv.writer(open(log_file, "w"))
-        self.logger.writerows([["id", "type", "time", "x", "y", "orient", "height", "width"]])
+        self.logger.writerows([["type", "time", "x", "y", "orient", "width", "height"]])
 
         self.info_file = open(info_file, "w")
+        self.order = order
+
+        self.video_start_time = -1
         print("Record date: {}".format(datetime.datetime.today()),
               file=self.info_file,
               flush=True)
 
-        self.cur_pos = [0, 0, 120]
-        self.cur_velocity = [0, 0]
-        self.cur_angle = [90, -90]
+        self.radius = 150
+        self.cur_pos = [150, 0, 120]
+        self.cur_velocity = [2, 0, 1, 1]
+        self.cur_angle = [90, -80]
+        self.cur_angular_velocity = [1, 1]  # One for x, y and one for pitch
 
         self.aspect_ratio = VIDEO_RES[1] / VIDEO_RES[0]
         self.boundaries = [2 * self.cur_pos[2] * math.tan(math.pi/4)]
@@ -93,18 +104,61 @@ class Recorder:
         camera_bp.set_attribute('image_size_x', str(VIDEO_RES[1]))
         camera_bp.set_attribute('image_size_y', str(VIDEO_RES[0]))
 
+        segmentation_camera = bp_library.find('sensor.camera.semantic_segmentation')
+        segmentation_camera.set_attribute('image_size_x', str(VIDEO_RES[1]))
+        segmentation_camera.set_attribute('image_size_y', str(VIDEO_RES[0]))
+
         transform = Transform(Location(x=self.cur_pos[0],
                                        y=self.cur_pos[1],
                                        z=self.cur_pos[2]),
                               Rotation(yaw=self.cur_angle[0], pitch=self.cur_angle[1]))
         self.camera = world.spawn_actor(camera_bp, transform)
+        self.segmentation_goggles = world.spawn_actor(segmentation_camera, transform)
 
         self.image_queue = queue.Queue()
+        self.segmentation_queue = queue.Queue()
         self.camera.listen(self.image_queue.put)
+        self.segmentation_goggles.listen(self.segmentation_queue.put)
 
-        self.video_start_time = -1
+        self.rotated_bounding = False
+        self.json_dict = {"video_filename": video_file,
+                          "frames": [],
+                          "categories": self.object_categories}
+        self.init_time = world.tick()
+        self.init_ms = world.get_snapshot().platform_timestamp
+        self.world = world
 
-    def log_actors(self, time, actors):
+    def move(self):
+        self.cur_pos[0] += self.cur_velocity[0]
+        self.cur_pos[1] += self.cur_velocity[1]
+        self.cur_angle[0] += self.cur_velocity[2]
+        self.cur_angle[1] += self.cur_velocity[3]
+
+        transform = Transform(Location(x=self.cur_pos[0],
+                                       y=self.cur_pos[1],
+                                       z=self.cur_pos[2]),
+                              Rotation(yaw=self.cur_angle[0], pitch=self.cur_angle[1]))
+
+        self.camera.set_transform(transform)
+        self.segmentation_goggles.set_transform(transform)
+
+    def move_2(self, time):
+        self.cur_pos[0] = self.radius * np.cos(self.cur_angular_velocity[0] * time)
+        self.cur_pos[1] = self.radius * np.sin(self.cur_angular_velocity[0] * time)
+
+        self.cur_angle[0] = np.pi / 2 * np.cos(self.cur_angular_velocity[1] * time)
+
+        transform = Transform(Location(x=self.cur_pos[0],
+                                       y=self.cur_pos[1],
+                                       z=self.cur_pos[2]),
+                              Rotation(yaw=self.cur_angle[0], pitch=self.cur_angle[1]))
+
+        self.camera.set_transform(transform)
+        self.segmentation_goggles.set_transform(transform)
+
+
+
+    def log_actors(self, time):
         """
         Actor logging function. Main loop provides the server time which is to be logged into the
         actor log file along with the pixel locations of the actor centers, bounding box size in
@@ -112,32 +166,32 @@ class Recorder:
         type and the ID is recorded.
 
         :param int time: Server time.
-        :param list actors: List of carla.Actor objects.
         :return: None
         """
-        for actor in actors:
-            location = actor.get_location()
-            actor_type = actor.type_id.split(".")[0]
+        detected_actors = self.detect_actors(time)
+        ms = self.world.get_snapshot().platform_timestamp
+        ms_diff = int((ms - self.init_ms) * 0.033 * 1000)
+        h_diff = int((ms - self.init_ms) * 0.033 // 3600)
+        m_diff = int((ms - self.init_ms) * 0.033 // 600 - h_diff * 60)
+        s_diff = int((ms - self.init_ms) * 0.033 - h_diff * 3600 - m_diff * 60)
+        cur_frame = {"frame": time-self.init_time,
+                     "miliseconds": "{}:{}:{}:{}".format(h_diff, m_diff, s_diff, ms_diff),
+                     "bboxes": []}
 
-            conversion_rate = VIDEO_RES[0] / self.boundaries[0] * self.cur_pos[2] / (self.cur_pos[2] - location.z)
-            x_bounds = self.boundaries[0]*conversion_rate // 2
-            y_bounds = self.boundaries[1]*conversion_rate // 2
+        for object_type in config.classes.keys():
+            if object_type not in ["Vehicles", "Pedestrians"]:
+                continue
+            self.logger.writerows(detected_actors[object_type])
 
-            del_x = location.x - self.cur_pos[0]
-            del_y = location.y - self.cur_pos[1]
-
-            rot_x, rot_y = np.matmul(self.rotation, np.array([[del_x], [del_y]]))
-            if -x_bounds < rot_x < x_bounds and \
-                    -y_bounds < rot_y < y_bounds:
-                orient = actor.get_transform().rotation.yaw - self.cur_angle[0]
-                box = actor.bounding_box
-                height = box.extent.x * conversion_rate
-                width = box.extent.y * conversion_rate
-
-                x_loc = int(-conversion_rate * rot_x + VIDEO_RES[0] // 2)
-                y_loc = int(conversion_rate * rot_y + VIDEO_RES[1] // 2)
-
-                self.logger.writerows([[actor.id, actor_type, time, x_loc, y_loc, orient, height, width]])
+            for actor in detected_actors[object_type]:
+                rect_points = helper.get_rect(actor[2], actor[3], actor[5], actor[6], actor[4])
+                actor_data = {"x": rect_points[0][0],
+                              "y": rect_points[0][1],
+                              "w": actor[5],
+                              "h": actor[6],
+                              "c": self.object_categories[actor[0]]}
+                cur_frame["bboxes"].append(actor_data)
+        self.json_dict["frames"].append(cur_frame)
 
     def record_img(self, time):
         """
@@ -161,6 +215,60 @@ class Recorder:
         self.writer.writeFrame(array)
         return array
 
+    def detect_actors(self, time):
+        image = self.segmentation_queue.get()
+        image.convert(cc.Raw)
+        array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+        array = np.reshape(array, (image.height, image.width, 4))
+        array = array[:, :, :3]
+        array = array[:, :, ::-1]
+
+        """
+        Filtering out the vegetation.
+        """
+        object_value = config.classes["Vegetation"]
+        threshold = ([val for val in object_value], [val for val in object_value])
+        mask = cv2.inRange(array, np.array(threshold[0]), np.array(threshold[1]))
+
+        contours, hierarchy = cv2.findContours(mask.copy(),
+                                               cv2.RETR_EXTERNAL,
+                                               cv2.CHAIN_APPROX_NONE)
+
+        for contour in contours:
+            rect = cv2.minAreaRect(contour)
+            cv2.rectangle(array,
+                          (int(rect[0][0]), int(rect[0][1])),
+                          (int(rect[0][0]) + int(rect[1][0]),
+                           int(rect[0][1]) + int(rect[1][1])),
+                          (255, 0, 0), -1)
+        
+        detected_actors = {}
+
+        for object_type in config.classes.keys():
+            if object_type not in ["Vehicles", "Pedestrians"]:
+                continue
+
+            detected_actors[object_type] = []
+            object_value = config.classes[object_type]
+            threshold = ([val for val in object_value], [val for val in object_value])
+            mask = cv2.inRange(array, np.array(threshold[0]), np.array(threshold[1]))
+            contours, hierarchy = cv2.findContours(mask.copy(),
+                                                   cv2.RETR_EXTERNAL,
+                                                   cv2.CHAIN_APPROX_NONE)
+
+            for contour in contours:
+                if self.rotated_bounding:
+                    rect = cv2.minAreaRect(contour)
+                    detected_actors[object_type].append([object_type, time, int(rect[0][0]), int(rect[0][1]),
+                                                         int(rect[2]), int(rect[1][0]), int(rect[1][1])])
+                else:
+                    rect = cv2.boundingRect(contour)
+                    detected_actors[object_type].append([object_type, time, int(rect[0]) + int(rect[2]) // 2,
+                                                         int(rect[1]) + int(rect[3] // 2), int(0), int(rect[2]),
+                                                         int(rect[3])])
+
+        return detected_actors
+
     @property
     def rotation(self):
         """
@@ -174,6 +282,12 @@ class Recorder:
                                     [np.sin(angle), np.cos(angle)]])
         return rotation_matrix
 
+    @property
+    def object_categories(self):
+        category = {"Vehicles": 0,
+                    "Pedestrian": 1}
+        return category
+
     def __del__(self):
         """
         Destructor method for the recorder object. All log file descriptors are destroyed and video writer
@@ -182,6 +296,8 @@ class Recorder:
         :return: None
         """
         print("Video start timestamp: {}".format(str(self.video_start_time)), file=self.info_file, flush=True)
+        with open('./out/result_{}.json'.format(self.order), 'w') as fp:
+            json.dump(self.json_dict, fp)
         self.camera.destroy()
         self.writer.close()
         self.info_file.close()

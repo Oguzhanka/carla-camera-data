@@ -23,9 +23,9 @@ def get_rect(x, y, width, height, angle):
     :return: Vertex coordinates.
     :rtype: list
     """
-    rect = np.array([(-width/0.6, -height/0.6), (width/0.6, -height/0.6),
-                     (width/0.6, height/0.6), (-width/0.6, height/0.6),
-                     (-width/0.6, -height/0.6)])
+    rect = np.array([(-width // 2, -height // 2), (width // 2, -height // 2),
+                     (width // 2, height // 2), (-width // 2, height // 2),
+                     (-width // 2, -height // 2)])
     theta = np.pi/180*angle
     R = np.array([[np.cos(theta), -np.sin(theta)],
                   [np.sin(theta), np.cos(theta)]])
@@ -57,7 +57,7 @@ def label_video(log_file, video_file, out_file):
         for x, y, w, h, phi in zip(current_objs["x"], current_objs["y"],
                                    current_objs["width"], current_objs["height"],
                                    current_objs["orient"]):
-            rect = get_rect(x=y, y=x, width=w, height=h, angle=-phi)
+            rect = get_rect(x=x, y=y, width=w, height=h, angle=-phi)
             draw.line([tuple(p) for p in rect], fill="red", width=3)
         labeled_frame = np.asarray(img)
         processed_video.writeFrame(labeled_frame)

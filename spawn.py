@@ -6,7 +6,6 @@ import glob
 import sys
 import os
 
-
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -15,8 +14,10 @@ try:
 except IndexError:
     pass
 
+import carla
 from carla import Transform
 from carla import Location, Rotation
+from carla import ColorConverter as cc
 
 
 class Spawn:
