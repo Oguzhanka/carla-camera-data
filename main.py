@@ -28,6 +28,9 @@ if __name__ == "__main__":
     video_file = "/home/oguzhan/PycharmProjects/carla/out/video_{}.mp4".format(order)
     log_file = "/home/oguzhan/PycharmProjects/carla/out/log_{}.csv".format(order)
     labeled_file = "/home/oguzhan/PycharmProjects/carla/out/labeled_{}.mp4".format(order)
+    fps = 0.033
+    num_vehics = 10
+    end_step = 15000
 
     client = carla.Client('192.168.12.211', 2000)
     client.set_timeout(10.0)
@@ -37,7 +40,7 @@ if __name__ == "__main__":
 
     if not settings.synchronous_mode:
         settings.synchronous_mode = True
-        settings.fixed_delta_seconds = 0.033
+        settings.fixed_delta_seconds = fps
         world.apply_settings(settings)
 
     record = recorder.Recorder(world=world,
@@ -49,7 +52,7 @@ if __name__ == "__main__":
     spawner = spawn.Spawn(world=world)
     start_time = 0.0
 
-    for i in range(10):
+    for i in range(num_vehics):
         spawner.spawn_actor(actor_type="vehicle")
 
     try:
@@ -65,7 +68,7 @@ if __name__ == "__main__":
             frame = record.record_img(server_time)
             record.move_2((cur_time - start_time) / 1000)
 
-            if k > 15000:
+            if k > end_step:
                 break
 
         raise KeyboardInterrupt
